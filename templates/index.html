@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Acesso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Área de Acesso</h2>
+        <p style="margin-bottom: 20px; color: #888; font-size: 14px;">Insira suas credenciais para continuar</p>
+        
+        <form action="/" method="POST">
+            <div class="input-group">
+                <input type="email" name="email" placeholder="E-mail de usuário" required>
+            </div>
+            
+            <div class="input-group">
+                <input type="password" name="senha" placeholder="Senha" required>
+            </div>
+            
+            <button type="submit">Entrar no Sistema</button>
+        </form>
+        
+        <div style="margin-top: 20px; font-size: 12px; color: #aaa;">
+            &copy; 2024 Seu Projeto de Login
+        </div>
+    </div>
+
+</body>
+</html>

