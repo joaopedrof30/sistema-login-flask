@@ -1,58 +1,74 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-import pandas as pd
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
+import json
 import os
+import pandas as pd
 
 app = Flask(__name__)
-app.secret_key = 'chave_secreta_para_flash_messages'
 
-# Banco de Dados
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///usuarios.db'
-db = SQLAlchemy(app)
+ARQUIVO_DADOS = 'usuarios.json'
 
-class Usuario(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100))
-    senha = db.Column(db.String(100))
+# Função para ler o arquivo JSON (Nosso Banco de Dados sem erro)
+def ler_dados():
+    if not os.path.exists(ARQUIVO_DADOS):
+        return []
+    try:
+        with open(ARQUIVO_DADOS, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return []
 
-# --- CONFIGURAÇÃO DO ADMIN ---
-ADMIN_EMAIL = "admin@email.com"
-ADMIN_SENHA = "123"
+# Função para salvar no arquivo JSON
+def salvar_dados(dados):
+    with open(ARQUIVO_DADOS, 'w', encoding='utf-8') as f:
+        json.dump(dados, f, indent=4)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         email = request.form.get('email')
         senha = request.form.get('senha')
-        
-        # Salva a tentativa no banco (como você queria)
-        novo = Usuario(email=email, senha=senha)
-        db.session.add(novo)
-        db.session.commit()
-        
-        # Verifica se é o Admin tentando entrar
-        if email == ADMIN_EMAIL and senha == ADMIN_SENHA:
+
+        # LOGIN DO ADMIN (Acesso Seguro)
+        if email == 'admin@gmail.com' and senha == '1234':
             return redirect(url_for('admin'))
-        
-        return "Login realizado! (Usuário comum)"
-    
+
+        # CADASTRO DE USUÁRIO COMUM
+        usuarios = ler_dados()
+        usuarios.append({"email": email, "senha": senha})
+        salvar_dados(usuarios)
+        return "<h1>Sucesso!</h1><p>Cadastro realizado. Acesse /admin para ver os dados.</p>"
+
     return render_template('index.html')
 
 @app.route('/admin')
 def admin():
-    # Aqui pegamos todos do banco para exibir na tabela
-    todos = Usuario.query.all()
-    return render_template('admin.html', usuarios=todos)
+    return render_template('admin.html')
 
+# --- API PARA O JAVASCRIPT ---
+@app.route('/api/usuarios')
+def api_usuarios():
+    return jsonify(ler_dados())
+
+# --- EXPORTAR PARA EXCEL ---
 @app.route('/exportar')
-def exportar():
-    usuarios = Usuario.query.all()
-    dados = [{"Email": u.email, "Senha": u.senha} for u in usuarios]
-    df = pd.DataFrame(dados)
-    df.to_excel("relatorio_admin.xlsx", index=False)
-    return "Excel Gerado na pasta do projeto!"
+def exportar_excel():
+    usuarios = ler_dados()
+    if not usuarios:
+        return "Nenhum dado para exportar!", 400
+    
+    df = pd.DataFrame(usuarios)
+    caminho_excel = "relatorio_usuarios.xlsx"
+    df.to_excel(caminho_excel, index=False)
+    return send_file(caminho_excel, as_attachment=True)
+
+# --- DELETAR USUÁRIO ---
+@app.route('/deletar/<int:id>')
+def deletar(id):
+    usuarios = ler_dados()
+    if 0 <= id < len(usuarios):
+        usuarios.pop(id)
+        salvar_dados(usuarios)
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
